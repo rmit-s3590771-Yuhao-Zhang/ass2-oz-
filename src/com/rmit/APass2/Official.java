@@ -13,6 +13,7 @@ public class Official extends Participants {
 	final int firstpoint = 5;
 	final int secondpoint = 2;
 	final int thirdpoint = 1;
+	final int nopoint = 0;
 
 	public Official(String ID, String type, String name, int age, String state) {
 		super(ID, type, name, age, state);
@@ -42,19 +43,15 @@ public class Official extends Participants {
 	public void summarise() {
 		for (int rank = 1; rank <= 3; rank++) {
 			Athlete athlete = resultList.get(rank);
-			switch (rank) {
-			case firstrank:
+			if(rank==firstrank){
 				athlete.addPoints(firstpoint);
-				break;
-			case secondrank:
+			}else if(rank==secondrank){
 				athlete.addPoints(secondpoint);
-				break;
-			case thirdrank:
+			}else if(rank==thirdrank){
 				athlete.addPoints(thirdpoint);
-				break;
-			default:
-				break;
 			}
+				
+			
 		}
 	}
 

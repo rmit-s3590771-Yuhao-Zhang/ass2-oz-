@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.JOptionPane;
+
 
 /**
  * 
@@ -43,7 +45,9 @@ public class Driver {
 	public static final String cycling = "Cycling";
 	public static final String running = "Running";
 	private int gameNum = 0;
+	public int athleteNo;
 	private String gameid;
+	private String text;
 	private Game game = null;
 	
 	public boolean databaseCheck() {
@@ -52,6 +56,9 @@ public class Driver {
 		if (participants.exists()) {
 			return true;
 		} else
+			text = "<html><span style='font-size:20px'>No database detected, result will be saved "
+					+ "locally</span></html>";
+			JOptionPane.showMessageDialog(null,text,"No database detected",2);
 			return false;
 	}
 
@@ -68,6 +75,8 @@ public class Driver {
 		// TODO Auto-generated method stub
 		if (databaseCheck()){
 			readFromDataBase();
+			printgameHistory();
+			
 		}else{
 			readFromTxt();
 		}
@@ -103,21 +112,21 @@ public class Driver {
 
 	private void readFromDataBase() {
 		try{
-			FileOutputStream writer = new FileOutputStream("Game Results.txt");
+			FileOutputStream writer = new FileOutputStream("Game Result.txt");
 			writer.write(("").getBytes());
 			writer.close();
 			Class.forName("org.sqlite.JDBC");
-			Connection participants = DriverManager.getConnection("jbdc:sqlite:participants.db");
+			Connection participants = DriverManager.getConnection("jdbc:sqlite:participants.db");
 			Statement stmt = participants.createStatement();
 			ResultSet rs = stmt.executeQuery("SELECT * FROM participants;");
 			int ColumnCount = rs.getMetaData().getColumnCount();
 			while(rs.next()){
 				String column ="";
-				for (int i = 0; i <= ColumnCount; i++) {
+				for (int i = 1; i <= ColumnCount; i++) {
 					if(i<ColumnCount){
-						column += rs.getString(i) + ", ";
+						column += rs.getString(i) + ",  ";
 					}else{
-						column += rs.getString(i)+". ";
+						column += rs.getString(i)+".  ";
 					}
 				}
 					itemSet.add(column);
@@ -182,6 +191,7 @@ public class Driver {
 	}
 	
 	public void startgame(String gameType, ArrayList<Athlete> athletes, Official official) {
+		athleteNo=athletes.size();
 		String gameID = gameType.charAt(0) + (gameNum < 10 ? "0" : "") + gameNum;
 		switch (gameType) {
 		case swimming:
@@ -192,12 +202,14 @@ public class Driver {
 			game = new Running(gameID, gameType, athletes, official);
 		}
 		game.start();
-		printGameResult(game, official);
+		generateResult(official);
+		
+		////////////////////////////////////////////////////////////////////////
+		printGameResult(game);
 		gameResultDatabase();
 		printgameHistory();
 		gameNum++;
 	}
-
 
 	private void printgameHistory() {
 		// TODO Auto-generated method stub
@@ -253,15 +265,18 @@ public class Driver {
 		return sortList;
 	}
 	
+	private void generateResult(Official official){
+		gameResult = game.getAllResult(athleteNo);
+		scoreList = official.getscoreList();
+	}
 	
-	private void printGameResult(Game game2, Official official) {
+	
+	private void printGameResult(Game game2) {
 		// TODO Auto-generated method stub
 		result = new ArrayList<>();
 		gameid = game.getID();
 		Calendar cal = Calendar.getInstance();
 		DateFormat dateFromat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS");
-		gameResult = game.getPrintResult();
-		scoreList = official.getscoreList();
 		BufferedWriter bw = null;
 		PrintWriter out = null;
 		try {
@@ -272,16 +287,20 @@ public class Driver {
 					result.add(gameid + " ," + gameResult.get(i) + " ," + dateFromat.format(cal.getTime()));
 					out.println(gameid + " ," + gameResult.get(i) + " ," + dateFromat.format(cal.getTime()));
 				} else if (i == 1) {
-					result.add(gameResult.get(i) + " ," + scoreList.get(i) + " , 5");
-					out.println(gameResult.get(i) + " ," + scoreList.get(i) + " , 5");
+					result.add(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 5");
+					out.println(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 5");
 				} else if (i == 2) {
-					result.add(gameResult.get(i) + " ," + scoreList.get(i) + " , 2");
-					out.println(gameResult.get(i) + " ," + scoreList.get(i) + " , 2");
+					result.add(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 2");
+					out.println(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 2");
 				} else if (i == 3) {
-					result.add(gameResult.get(i) + " ," + scoreList.get(i) + " , 1");
-					out.println(gameResult.get(i) + " ," + scoreList.get(i) + " , 1");
+					result.add(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 1");
+					out.println(gameResult.get(i) + " ," + scoreList.get(i-1) + " , 1");
+				} else if (i>3){
+					result.add(gameResult.get(i) + " ,"+ scoreList.get(i-1) + " , 0" );
+					
 				}
 			}
+			
 		} catch (FileNotFoundException e1) {
 			e1.getMessage();
 		} catch (IOException e2) {
@@ -335,6 +354,10 @@ public class Driver {
 	public ArrayList<String> getresult() {
 		// TODO Auto-generated method stub
 		return result;
+	}
+	
+	public List<Integer> getscore() {
+		return scoreList;
 	}
 }
 

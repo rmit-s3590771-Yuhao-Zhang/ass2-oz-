@@ -38,6 +38,15 @@ public abstract class Game {
 		return pList;
 	}
 
+	public List<String> getAllResult(int max) {
+		List<String> pList = new ArrayList<String>();
+		pList.add(referee.getID());
+		for(int i=0; i<max;i++){
+		pList.add(resultList.get(i).getID());
+		}
+		return pList;
+	}
+	
 	
 	public String getID() {
 		return ID;

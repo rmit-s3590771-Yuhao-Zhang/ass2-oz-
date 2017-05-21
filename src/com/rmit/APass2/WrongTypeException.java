@@ -1,9 +1,20 @@
 package com.rmit.APass2;
 
+/**
+ * 
+ * @author samadikun
+ *
+ */
+
+import javax.swing.JOptionPane;
+
 public class WrongTypeException extends Exception {
 
 	public WrongTypeException() {
 		// TODO Auto-generated constructor stub
+		String text = "<html><span style='font-size:20px'>Please choose only qualified athletes!</span></html>";
+		JOptionPane.showMessageDialog(null,text,"Wrong athlete type",2);
+		return;
 	}
 
 	public WrongTypeException(String message) {

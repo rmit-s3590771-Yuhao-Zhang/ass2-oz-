@@ -1,10 +1,15 @@
 import java.util.ArrayList;
+import java.util.Random;
+
+import javax.swing.UIManager;
 
 import com.rmit.APass2.Athlete;
 import com.rmit.APass2.Cyclist;
 import com.rmit.APass2.Driver;
 import com.rmit.APass2.GameFullException;
+import com.rmit.APass2.NoDatabaseException;
 import com.rmit.APass2.NoRefereeException;
+import com.rmit.APass2.NoTextException;
 import com.rmit.APass2.Official;
 import com.rmit.APass2.Participants;
 import com.rmit.APass2.Sprinter;
@@ -13,6 +18,7 @@ import com.rmit.APass2.Swimmer;
 import com.rmit.APass2.TooFewAthleteException;
 import com.rmit.APass2.WrongTypeException;
 
+import javafx.animation.PathTransition;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -31,10 +37,13 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
  * 
@@ -42,14 +51,16 @@ import javafx.stage.Stage;
  *
  */
 public class Ozlympic extends Application{
+	Driver driver;
 	Stage window;
-	Scene scene1, scene2, scene3,
-		  scene4, scene5, scene6;
+	Scene scene1, scene3,
+		  scene4, scene5, scene6,scene7;
 	ArrayList<Athlete> ChoosenAthletes = new ArrayList<>();
 	Official ChoosenOfficaial = null;
 	final int NotEnoughAthleteException = 4;
 	final int TooMuchAthleteException = 8;
 	private String sportType;
+	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -59,16 +70,22 @@ public class Ozlympic extends Application{
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub
-		Driver driver = new Driver();
+		driver = new Driver();
 		driver.databaseCheck();
+		if(driver.databaseCheck()==false)
+			throw new NoDatabaseException();
 		driver.txtCheck();
+		if(driver.txtCheck()==false)
+			throw new NoTextException();
 		driver.getData();
 		driver.initialisation();
-	//scene1 Welcome View set up
+		window = primaryStage;
+		
+//	scene1 Welcome View set up
 		VBox Scene1VBox = new VBox();
 		HBox Scene1HBox = new HBox();
 		Text title1 = new Text();
-		Label MainLabel = new Label();
+		Label MainLabel = new Label("Welcome to Ozlympic game!");
 		Button buttonWelcome = new Button("Welcome!");
 		Button buttonExit = new Button("Exit!");
 		title1.setText("Welcome to Ozlympic game!");
@@ -84,18 +101,25 @@ public class Ozlympic extends Application{
 		Scene1VBox.setSpacing(20);
 		Scene1VBox.setAlignment(Pos.CENTER);
 		Scene1VBox.getChildren().addAll(MainLabel,Scene1HBox);
-		scene1 = new Scene(Scene1VBox,700,700);
+		scene1 = new Scene(Scene1VBox,700,400);
 		primaryStage.setTitle("Ozlympic Game");
 		primaryStage.setScene(scene1);
 		primaryStage.show();
 		
 	//Scene2 Menu set up
+//		AnchorPane rootPane= new AnchorPane();
 		VBox Scene2VBox = new VBox();
 		Text title2 = new Text();
 		Button buttonNewGame = new Button("New Game!");
 		Button buttonGameHistory = new Button("Check history");
 		Button buttonresult = new Button("Check points");
 		Button buttonExit2 = new Button("Exit!");
+		
+		buttonNewGame.setPrefSize(400, 50);
+		buttonGameHistory.setPrefSize(400, 50);
+		buttonresult.setPrefSize(400, 50);
+		buttonExit2.setPrefSize(400, 50);
+		title2.setLayoutX(200);
 		if(!driver.databaseCheck()){
 			title2.setText("Can not find DataBase" );
 			title2.setFill(Color.RED);
@@ -105,19 +129,12 @@ public class Ozlympic extends Application{
 			}
 		}
 		else { 
-			title2.setText("Let's start a  new game first!");
-			title2.setFill(Color.GREEN);
+			title2.setText("Please select a option to start");
 		}
-		buttonNewGame.setPrefSize(400, 50);
-		buttonGameHistory.setPrefSize(400, 50);
-		buttonresult.setPrefSize(400, 50);
-		buttonExit2.setPrefSize(400, 50);
-		Scene2VBox.setPadding(new Insets(4));
-		Scene2VBox.setSpacing(10);
-		Scene2VBox.setAlignment(Pos.CENTER);
-		title1.setFont(Font.font("Arial", FontWeight.BLACK, 20));
-		Scene2VBox.getChildren().addAll(title1,buttonNewGame,buttonGameHistory,buttonresult,buttonExit2);
-		scene2 = new Scene(Scene2VBox,400,400);
+		title2.setFont(Font.font("Arial", FontWeight.BLACK, 20));
+		Scene2VBox.getChildren().addAll(title2,buttonNewGame,buttonGameHistory,buttonresult,buttonExit2);
+//		rootPane.getChildren().addAll(title2,buttonNewGame,buttonGameHistory,buttonresult,buttonExit2);
+		Scene scene2 = new Scene(Scene2VBox,400,200);
 		
 		//scene3 main view set up
 		AnchorPane rootPane1  = new AnchorPane();
@@ -127,7 +144,8 @@ public class Ozlympic extends Application{
 		Label gameLB = new Label("Select a game type");
 		Label athleteLB = new Label("Select 4~8 athletes");
 		Label officialLB = new Label("Select one official");
-		ListView<String> gameList = new ListView<String>(FXCollections.observableArrayList(Driver.swimming, Driver.cycling, Driver.running));
+		ListView<String> gameList = new ListView<String>(FXCollections.observableArrayList(Driver.swimming, 
+				Driver.cycling, Driver.running));
 		ListView<Participants> ParticipantsList1 = new ListView<>();
 		ListView<Participants> ParticipantsList2 = new ListView<>();
 		Button buttonMainMenu = new Button("Main menu");
@@ -153,8 +171,12 @@ public class Ozlympic extends Application{
 		ParticipantsList1.setItems(ParticipantsObservableList1);
 		ParticipantsList2.setItems(ParticipantsObservableList2);
 		ParticipantsList1.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		gameList.setPrefHeight(100);
+		ParticipantsList1.setPrefHeight(100);
+		ParticipantsList2.setPrefHeight(100);
 		Scene3HBox.getChildren().addAll(buttonMainMenu,buttonStartGame,buttonExit3);
-		Scene3VBox.getChildren().addAll(gameLB,gameList,athleteLB,ParticipantsList1,ParticipantsList2,Scene3HBox);
+		Scene3VBox.getChildren().addAll(gameLB,gameList,athleteLB,ParticipantsList1,
+				officialLB,ParticipantsList2,Scene3HBox);
 		rootPane1.getChildren().addAll(Scene3VBox);
 		
 		//scene4 game history set up
@@ -193,17 +215,34 @@ public class Ozlympic extends Application{
 		Button buttonExit6 = new Button("Exit!");
 		ListView<String> resultList = new ListView<>();
 		buttonMainMenu4.setPrefSize(300,50);
-		buttonExit5.setPrefSize(300, 50);
+		buttonExit6.setPrefSize(300,50);
 		resultList.setPrefWidth(400);
 		scene6HBox.getChildren().addAll(buttonMainMenu4,buttonExit6);
 		scene6VBox.getChildren().addAll(resultList,scene6HBox);
 		rootpane4.getChildren().addAll(scene6VBox);
+				
+		//scene 7 setup
+		AnchorPane rootpane5 = new AnchorPane();
+		Button buttonMainMenu5= new Button("Show Result!");
+		VBox scene7VBox = new VBox();
+		rootpane5.setPrefSize(800, 500);
+		buttonMainMenu5.setPrefSize(800,50);
+		scene7VBox.getChildren().addAll(buttonMainMenu5);
+		
+		
+		//for
+		//scene7VBox.getChildren().addAll(resultList);
+		
+		
+		
 		
 		//function
-		scene3 = new Scene(Scene3VBox);
-		scene4 = new Scene(scene4VBox);
-		scene5 = new Scene(scene5VBox);
-		scene6 = new Scene(scene6VBox);
+		//scene 3-7-6
+		scene3 = new Scene(rootPane1);
+		scene4 = new Scene(rootpane2);
+		scene5 = new Scene(rootpane3);
+		scene6 = new Scene(rootpane4);
+		scene7 = new Scene(rootpane5);
 		buttonWelcome.setOnAction(e -> {
 			window.setScene(scene2);
 		});
@@ -226,7 +265,7 @@ public class Ozlympic extends Application{
 			ObservableList<String> athletePointObservableList = FXCollections.observableArrayList(athletePoint);
 			athletePointList.setItems(athletePointObservableList);
 			window.setTitle("Athlete Points");
-			window.setScene(scene4);			
+			window.setScene(scene5);			
 		});	
 		buttonExit2.setOnAction(e -> {			
 			window.close();		
@@ -309,17 +348,54 @@ public class Ozlympic extends Application{
 					else 
 						throw new WrongTypeException();					
 				}
-				if (ChoosenAthletes.size() <= NotEnoughAthleteException)
+				if (ChoosenAthletes.size() < NotEnoughAthleteException)
 					throw new TooFewAthleteException();
-				else if (ChoosenAthletes.size() >= TooMuchAthleteException)
+				else if (ChoosenAthletes.size() > TooMuchAthleteException)
 					throw new GameFullException();
 				else if (ChoosenOfficaial == null)
 					throw new NoRefereeException();
 				
 				
 				driver.startgame(sportType, ChoosenAthletes, ChoosenOfficaial);
+				
 				window.setTitle("Game Result");
-				window.setScene(scene5);
+				window.setScene(scene7);
+				
+				/////Animation
+				int animationTime = 0;
+				 if(sportType == "swimming")
+					 animationTime = 10;
+			        else if(sportType == "running")
+			        	animationTime = 1;
+			        else
+			        	animationTime = 50;
+				int y = 100;
+
+				Random rand = new Random();
+				
+				
+				
+				for(int i=0; i<ChoosenAthletes.size();i++){
+
+					Circle circle = new Circle(10,y,10);
+					//Rectangle rectangle = new Rectangle(0, y, 30, 20);
+					float r= rand.nextFloat();float g= rand.nextFloat();float b= rand.nextFloat();
+					circle.setFill(Color.color(r, g, b));
+					Line line = new Line(10, y, 750, y);
+					rootpane5.getChildren().add(circle);
+					rootpane5.getChildren().add(line);
+					PathTransition path = new PathTransition();
+					path.setDuration(Duration.seconds(driver.getscore().get(i)/animationTime));
+					path.setNode(circle);
+					path.setPath(line);					
+					y = y+50;
+					path.play();			
+					
+				}
+				rootpane5.getChildren().addAll(scene7VBox);
+				
+				
+				
 				gameList.getSelectionModel().clearSelection();
 				ParticipantsList1.getSelectionModel().clearSelection();
 				ParticipantsList2.getSelectionModel().clearSelection();
@@ -335,10 +411,7 @@ public class Ozlympic extends Application{
 			} catch (Exception e2){
 				title2.setText("Please select a game type");
 			}				
-			
-
-	
-			
+					
 			ArrayList<String> result = driver.getresult();
 			ObservableList<String> resultObservableList = FXCollections.observableArrayList(result);
 			resultList.setItems(resultObservableList);
@@ -370,6 +443,12 @@ public class Ozlympic extends Application{
 		buttonExit6.setOnAction(e -> {			
 			window.close();		
 		});	
+		buttonMainMenu5.setOnAction(e -> {
+			rootpane5.getChildren().clear();
+			window.setTitle("Result Summary");
+			window.setScene(scene6);
+		});
+		
 	}
 	
 }

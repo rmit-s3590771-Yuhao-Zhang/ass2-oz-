@@ -1,9 +1,26 @@
 package com.rmit.APass2;
 
-public class TooFewAthleteException extends Exception {
 
+/**
+ * 
+ * @author samadikun
+ *
+ */
+
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import javafx.scene.text.Font;
+
+public class TooFewAthleteException extends Exception {
+	
 	public TooFewAthleteException() {
 		// TODO Auto-generated constructor stub
+
+		String text = "<html><span style='font-size:20px'>Atleast 4 athletes needed To start a game</span></html>";
+		JOptionPane.showMessageDialog(null,text,"Not enough Athlete",2);
+		return;
 	}
 
 	public TooFewAthleteException(String message) {
